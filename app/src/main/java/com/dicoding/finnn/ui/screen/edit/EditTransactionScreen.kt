@@ -32,7 +32,7 @@ fun EditTransactionScreen(
             amount = it.amount.toString() ?: ""
             type = it.type ?: "income"
             description = it.description ?: ""
-            transactionDate = it.transactionDate ?: ""
+            transactionDate = it.transaction_date ?: ""
         }
     }
 
