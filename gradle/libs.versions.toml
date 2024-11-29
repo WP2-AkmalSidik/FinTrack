@@ -2,6 +2,7 @@
 agp = "8.4.1"
 converterGson = "2.9.0"
 converterGsonVersion = "2.9.0'"
+datastorePreferencesVersion = "1.0.0"
 gson = "2.10.1"
 kotlin = "1.9.0"
 coreKtx = "1.15.0"
@@ -28,6 +29,7 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 androidx-navigation-compose-v240alpha10 = { module = "androidx.navigation:navigation-compose", version.ref = "navigationComposeVersion" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 converter-gson-v290 = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGsonVersion" }
+datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferencesVersion" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

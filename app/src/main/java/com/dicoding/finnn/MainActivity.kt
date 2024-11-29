@@ -7,25 +7,31 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.dicoding.finnn.data.local.DataStoreManager
 import com.dicoding.finnn.ui.component.BottomNavigationBar
 import com.dicoding.finnn.ui.screen.auth.AuthViewModel
 import com.dicoding.finnn.ui.screen.auth.LoginScreen
 import com.dicoding.finnn.ui.screen.auth.RegisterScreen
 import com.dicoding.finnn.ui.screen.navigation.AppNavGraph
 import com.dicoding.finnn.ui.theme.FinnnTheme
-import com.dicoding.finnn.ui.screen.home.TransactionViewModel // Pastikan ini diimport dengan benar
+import com.dicoding.finnn.ui.screen.home.TransactionViewModel
+import kotlinx.coroutines.launch
 
 sealed class Screen {
     object Login : Screen()
     object Register : Screen()
-    object App : Screen() // Tambahkan Screen App sebagai layar utama setelah login
+    object App : Screen()
 }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val dataStoreManager = DataStoreManager(applicationContext)
+
         setContent {
             FinnnTheme {
                 var currentScreen by remember { mutableStateOf<Screen>(Screen.Login) }
@@ -33,8 +39,17 @@ class MainActivity : ComponentActivity() {
                 val transactionViewModel: TransactionViewModel = viewModel()
                 val navController = rememberNavController()
 
-                LaunchedEffect(authViewModel.loginStatus.collectAsState().value) {
-                    currentScreen = if (authViewModel.loginStatus.value) Screen.App else Screen.Login
+                // Initialize token from DataStore
+                LaunchedEffect(Unit) {
+                    dataStoreManager.authToken.collect { token ->
+                        if (!token.isNullOrEmpty()) {
+                            authViewModel.authToken = token
+                            transactionViewModel.setAuthToken(token)
+                            currentScreen = Screen.App
+                        } else {
+                            currentScreen = Screen.Login
+                        }
+                    }
                 }
 
                 Scaffold(
@@ -47,8 +62,7 @@ class MainActivity : ComponentActivity() {
                     when (currentScreen) {
                         is Screen.Login -> LoginScreen(
                             viewModel = authViewModel,
-                            onLoginSuccess = { token ->
-                                transactionViewModel.setAuthToken(token) // Menyimpan token
+                            onLoginSuccess = {
                                 currentScreen = Screen.App
                             },
                             onNavigateToRegister = { currentScreen = Screen.Register },
@@ -64,7 +78,12 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             authViewModel = authViewModel,
                             transactionViewModel = transactionViewModel,
-                            onLogout = { currentScreen = Screen.Login }
+                            onLogout = {
+                                lifecycleScope.launch { // Use lifecycleScope to handle suspend function
+                                    dataStoreManager.clearSession() // Clear session
+                                }
+                                currentScreen = Screen.Login
+                            }
                         )
                     }
                 }

@@ -5,13 +5,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dicoding.finnn.data.remote.response.User
 import com.dicoding.finnn.data.remote.retrofit.ApiConfig
-import com.dicoding.finnn.data.remote.retrofit.LoginRequest
 import com.dicoding.finnn.data.remote.retrofit.RegisterRequest
+import kotlinx.coroutines.launch
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.dicoding.finnn.data.local.DataStoreManager
+import com.dicoding.finnn.data.remote.retrofit.LoginRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(application: Application) : AndroidViewModel(application) {
+    private val dataStoreManager = DataStoreManager(application)
+
     private val _loginStatus = MutableStateFlow(false)
     val loginStatus: StateFlow<Boolean> = _loginStatus
 
@@ -25,6 +32,64 @@ class AuthViewModel : ViewModel() {
     val userProfile: StateFlow<User?> = _userProfile
 
     var authToken: String? = null
+
+    init {
+        viewModelScope.launch {
+            dataStoreManager.isLoggedIn.collect { loggedIn ->
+                _loginStatus.value = loggedIn
+            }
+            dataStoreManager.authToken.collect { token ->
+                authToken = token
+            }
+        }
+    }
+
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            _loading.value = true
+            _errorMessage.value = null
+
+            try {
+                val response = ApiConfig.apiService.login(LoginRequest(email, password))
+                _loading.value = false
+
+                if (response.isSuccessful && response.body() != null) {
+                    val token = response.body()?.token.orEmpty()
+                    authToken = token
+                    _loginStatus.value = true
+
+                    // Simpan token ke DataStore
+                    dataStoreManager.saveUserSession(token, true)
+                } else {
+                    _errorMessage.value = "Login failed: ${response.message()}"
+                }
+            } catch (e: Exception) {
+                _loading.value = false
+                _errorMessage.value = "Error: ${e.message}"
+            }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            _loading.value = true
+            try {
+                authToken?.let { token ->
+                    val response = ApiConfig.apiService.logout("Bearer $token")
+                    if (response.isSuccessful) {
+                        // Clear session
+                        dataStoreManager.clearSession()
+                        authToken = null
+                        _loginStatus.value = false
+                    }
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error during logout: ${e.message}"
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
 
     fun fetchUserProfile() {
         viewModelScope.launch {
@@ -47,56 +112,6 @@ class AuthViewModel : ViewModel() {
                 Log.e("AuthViewModel", "Error fetching user profile: ${e.message}")
             } finally {
                 _loading.value = false
-            }
-        }
-    }
-
-    fun login(email: String, password: String, onTokenReceived: (String) -> Unit) {
-        viewModelScope.launch {
-            _loading.value = true
-            _errorMessage.value = null
-
-            try {
-                val response = ApiConfig.apiService.login(LoginRequest(email, password))
-                _loading.value = false
-
-                if (response.isSuccessful && response.body() != null) {
-                    val token = response.body()?.token ?: ""
-                    _loginStatus.value = true
-                    authToken = token
-                    onTokenReceived(token)  // Kirim token ke TransactionViewModel
-                } else {
-                    val errorMsg = "Login failed: ${response.message()}"
-                    Log.e("AuthViewModel", errorMsg)
-                }
-            } catch (e: Exception) {
-                _loading.value = false
-                val errorMsg = "Login request failed: ${e.message}"
-                Log.e("AuthViewModel", errorMsg)
-            }
-        }
-    }
-
-    fun logout() {
-        viewModelScope.launch {
-            _loading.value = true  // Mulai animasi loading
-            try {
-                val token = authToken ?: return@launch  // Pastikan token ada sebelum logout
-                val response = ApiConfig.apiService.logout("Bearer $token") // Menyertakan token
-
-                if (response.isSuccessful) {
-                    authToken = null  // Hapus token setelah logout
-                    _loginStatus.value = false
-                    Log.d("AuthViewModel", "Logout successful.")
-                } else {
-                    val errorMsg = "Logout failed: ${response.message()}"
-                    Log.e("AuthViewModel", errorMsg)
-                }
-            } catch (e: Exception) {
-                val errorMsg = "Logout request failed: ${e.message}"
-                Log.e("AuthViewModel", errorMsg)
-            } finally {
-                _loading.value = false  // Hentikan animasi loading
             }
         }
     }

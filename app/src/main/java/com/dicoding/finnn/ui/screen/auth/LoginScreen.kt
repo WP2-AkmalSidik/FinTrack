@@ -15,7 +15,7 @@ import com.dicoding.finnn.ui.theme.FinnnTheme
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    onLoginSuccess: (String) -> Unit = {}, // Memastikan ada parameter token
+    onLoginSuccess: () -> Unit = {}, // Callback tanpa token
     onNavigateToRegister: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -25,9 +25,10 @@ fun LoginScreen(
     val isLoading by viewModel.loading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
 
+    // Observasi perubahan status login
     LaunchedEffect(viewModel.loginStatus.collectAsState().value) {
-        if (viewModel.loginStatus.value && viewModel.authToken != null) {
-            onLoginSuccess(viewModel.authToken!!) // Gunakan authToken
+        if (viewModel.loginStatus.value) {
+            onLoginSuccess()
         }
     }
 
@@ -68,9 +69,7 @@ fun LoginScreen(
         } else {
             Button(
                 onClick = {
-                    viewModel.login(email, password) { token ->
-                        onLoginSuccess(token)
-                    }
+                    viewModel.login(email, password) // Sesuaikan dengan perubahan AuthViewModel
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

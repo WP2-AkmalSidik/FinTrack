@@ -82,17 +82,17 @@ fun AppNavGraph(
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewNavigation() {
-    val navController = rememberNavController()
-    val authViewModel = AuthViewModel() // Provide a test instance of AuthViewModel
-    val transactionViewModel = TransactionViewModel() // Provide a test instance of TransactionViewModel
-    AppNavGraph(
-        navController = navController,
-        authViewModel = authViewModel,
-        transactionViewModel = transactionViewModel,
-        onLogout = {} // Pass an empty lambda for logout
-    )
-}
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewNavigation() {
+//    val navController = rememberNavController()
+//    val authViewModel = AuthViewModel() // Provide a test instance of AuthViewModel
+//    val transactionViewModel = TransactionViewModel() // Provide a test instance of TransactionViewModel
+//    AppNavGraph(
+//        navController = navController,
+//        authViewModel = authViewModel,
+//        transactionViewModel = transactionViewModel,
+//        onLogout = {} // Pass an empty lambda for logout
+//    )
+//}

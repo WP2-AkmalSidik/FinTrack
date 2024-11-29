@@ -30,13 +30,18 @@ class TransactionViewModel : ViewModel() {
         viewModelScope.launch {
             Log.d("TransactionViewModel", "Loading transactions...")
             authToken?.let {
-                val response = ApiConfig.apiService.getTransactions("Bearer $it")
-                if (response.isSuccessful) {
-                    _transactions.value = response.body() ?: emptyList()
-                    Log.d("TransactionViewModel", "Transactions loaded successfully.")
-                } else {
-                    _errorMessage.value = "Failed to load transactions"
-                    Log.e("TransactionViewModel", "Failed to load transactions: ${response.message()}")
+                try {
+                    val response = ApiConfig.apiService.getTransactions("Bearer $it")
+                    if (response.isSuccessful) {
+                        _transactions.value = response.body() ?: emptyList()
+                        Log.d("TransactionViewModel", "Transactions loaded successfully.")
+                    } else {
+                        _errorMessage.value = "Failed to load transactions"
+                        Log.e("TransactionViewModel", "Failed to load transactions: ${response.message()}")
+                    }
+                } catch (e: Exception) {
+                    _errorMessage.value = "Error loading transactions: ${e.message}"
+                    Log.e("TransactionViewModel", "Error loading transactions: ${e.message}")
                 }
             } ?: Log.e("TransactionViewModel", "Auth token is null, cannot load transactions.")
         }
@@ -45,11 +50,15 @@ class TransactionViewModel : ViewModel() {
     fun createTransaction(transaction: TransactionRequest) {
         viewModelScope.launch {
             authToken?.let {
-                val response = ApiConfig.apiService.createTransaction("Bearer $it", transaction)
-                if (response.isSuccessful) {
-                    loadTransactions()  // Refresh the list
-                } else {
-                    _errorMessage.value = "Failed to create transaction"
+                try {
+                    val response = ApiConfig.apiService.createTransaction("Bearer $it", transaction)
+                    if (response.isSuccessful) {
+                        loadTransactions() // Refresh the list
+                    } else {
+                        _errorMessage.value = "Failed to create transaction"
+                    }
+                } catch (e: Exception) {
+                    _errorMessage.value = "Error creating transaction: ${e.message}"
                 }
             }
         }
@@ -58,11 +67,15 @@ class TransactionViewModel : ViewModel() {
     fun updateTransaction(id: Int, transaction: TransactionRequest) {
         viewModelScope.launch {
             authToken?.let {
-                val response = ApiConfig.apiService.updateTransaction("Bearer $it", id, transaction)
-                if (response.isSuccessful) {
-                    loadTransactions()
-                } else {
-                    _errorMessage.value = "Failed to update transaction"
+                try {
+                    val response = ApiConfig.apiService.updateTransaction("Bearer $it", id, transaction)
+                    if (response.isSuccessful) {
+                        loadTransactions()
+                    } else {
+                        _errorMessage.value = "Failed to update transaction"
+                    }
+                } catch (e: Exception) {
+                    _errorMessage.value = "Error updating transaction: ${e.message}"
                 }
             }
         }
@@ -71,11 +84,15 @@ class TransactionViewModel : ViewModel() {
     fun deleteTransaction(id: Int) {
         viewModelScope.launch {
             authToken?.let {
-                val response = ApiConfig.apiService.deleteTransaction("Bearer $it", id)
-                if (response.isSuccessful) {
-                    loadTransactions()  // Refresh transactions after delete
-                } else {
-                    _errorMessage.value = "Failed to delete transaction"
+                try {
+                    val response = ApiConfig.apiService.deleteTransaction("Bearer $it", id)
+                    if (response.isSuccessful) {
+                        loadTransactions() // Refresh transactions after delete
+                    } else {
+                        _errorMessage.value = "Failed to delete transaction"
+                    }
+                } catch (e: Exception) {
+                    _errorMessage.value = "Error deleting transaction: ${e.message}"
                 }
             }
         }

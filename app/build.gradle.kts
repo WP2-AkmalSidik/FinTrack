@@ -80,4 +80,7 @@ dependencies {
     implementation (libs.kotlinx.coroutines.android)
     implementation (libs.okhttp)
     implementation (libs.logging.interceptor)
+
+    // Local
+    implementation (libs.datastore.preferences)
 }

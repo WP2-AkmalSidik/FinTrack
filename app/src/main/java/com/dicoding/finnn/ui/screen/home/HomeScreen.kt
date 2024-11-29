@@ -52,7 +52,7 @@ fun HomeScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate("addTransaction") },
-                containerColor = MaterialTheme.colorScheme.tertiary,
+                containerColor = MaterialTheme.colorScheme.primary,
                 elevation = FloatingActionButtonDefaults.elevation(8.dp)
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Add Transaction")
