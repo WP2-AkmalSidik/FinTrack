@@ -3,6 +3,7 @@ package com.dicoding.finnn.ui.screen.profile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
@@ -61,7 +62,7 @@ fun ProfileScreen(
                 actions = {
                     IconButton(onClick = { showLogoutDialog = true }) {
                         Icon(
-                            imageVector = Icons.Default.ExitToApp,
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                             contentDescription = "Logout",
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
@@ -114,7 +115,7 @@ fun ProfileScreen(
                     Text(
                         text = "Balance: Rp $balance",
                         style = MaterialTheme.typography.titleLarge,
-                        color = if (balance >= 0) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error
+                        color = if (balance >= 0)  Color(0xFF4CAF50) else Color(0xFFF44336)
                     )
                 }
             }
