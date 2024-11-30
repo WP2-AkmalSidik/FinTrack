@@ -150,7 +150,6 @@ fun ProfileScreen(
         )
     }
 
-    // Edit Profile Dialog
     if (showEditDialog) {
         AlertDialog(
             onDismissRequest = { showEditDialog = false },
@@ -181,20 +180,33 @@ fun ProfileScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    if (editingPassword == confirmPassword && editingPassword.isNotBlank()) {
+                    if (editingName.isBlank() && editingPassword.isBlank()) {
                         scope.launch {
-                            authViewModel.updateProfile(editingName, editingPassword, confirmPassword)
-                            if (authViewModel.errorMessage.value == null) {
-                                snackbarHostState.showSnackbar("Profile updated successfully")
-                                authViewModel.fetchUserProfile() // Refresh user profile
-                                showEditDialog = false // Close dialog
-                            } else {
-                                snackbarHostState.showSnackbar(authViewModel.errorMessage.value ?: "Error updating profile")
-                            }
+                            snackbarHostState.showSnackbar("Please provide either a name or a password.")
                         }
-                    } else {
+                        return@TextButton
+                    }
+
+                    if (editingPassword.isNotBlank() && editingPassword != confirmPassword) {
                         scope.launch {
-                            snackbarHostState.showSnackbar("Passwords do not match")
+                            snackbarHostState.showSnackbar("Passwords do not match.")
+                        }
+                        return@TextButton
+                    }
+
+                    scope.launch {
+                        authViewModel.updateProfile(
+                            name = if (editingName != userName) editingName else null,
+                            password = if (editingPassword.isNotBlank()) editingPassword else null,
+                            passwordConfirmation = if (editingPassword.isNotBlank()) confirmPassword else null
+                        )
+
+                        if (authViewModel.errorMessage.value == null) {
+                            snackbarHostState.showSnackbar("Profile updated successfully")
+                            authViewModel.fetchUserProfile()
+                            showEditDialog = false
+                        } else {
+                            snackbarHostState.showSnackbar(authViewModel.errorMessage.value ?: "Error updating profile")
                         }
                     }
                 }) {
@@ -209,7 +221,6 @@ fun ProfileScreen(
         )
     }
 
-    // Loading Indicator
     if (isLoading && userProfile == null) {
         Box(
             modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)),
