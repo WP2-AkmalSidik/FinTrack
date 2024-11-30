@@ -21,15 +21,30 @@ fun LoginScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
 
     val isLoading by viewModel.loading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
 
     // Observasi perubahan status login
     LaunchedEffect(viewModel.loginStatus.collectAsState().value) {
         if (viewModel.loginStatus.value) {
             onLoginSuccess()
         }
+    }
+
+    // Dialog untuk kesalahan login
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Login Gagal") },
+            text = { Text(dialogMessage) },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 
     Column(
@@ -69,7 +84,14 @@ fun LoginScreen(
         } else {
             Button(
                 onClick = {
-                    viewModel.login(email, password) // Sesuaikan dengan perubahan AuthViewModel
+                    viewModel.login(email, password) { errorType ->
+                        dialogMessage = when (errorType) {
+                            "EMAIL_NOT_FOUND" -> "Email tidak terdaftar."
+                            "WRONG_PASSWORD" -> "Password salah."
+                            else -> "Login gagal. Silakan coba lagi."
+                        }
+                        showDialog = true
+                    }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -78,10 +100,6 @@ fun LoginScreen(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-
-        errorMessage?.let {
-            Text(it, color = MaterialTheme.colorScheme.error)
-        }
 
         TextButton(onClick = onNavigateToRegister) {
             Text("Belum punya akun? Daftar di sini")
