@@ -31,21 +31,16 @@ fun ProfileScreen(
     val userProfile by authViewModel.userProfile.collectAsState()
     val userName = userProfile?.name ?: "Loading..."
 
-    val income = transactions.filter { it.type == "income" }.sumOf { it.amount }
-    val expense = transactions.filter { it.type == "expense" }.sumOf { it.amount }
-    val balance = income - expense
-
-    // Dialog states
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var editingName by remember { mutableStateOf(userName) }
     var editingPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var isLogoutProcessing by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Load user profile when the screen opens
     LaunchedEffect(Unit) {
-        if (userProfile == null) { // Avoid showing loading if profile is already loaded
+        if (userProfile == null) {
             authViewModel.fetchUserProfile()
         }
     }
@@ -53,12 +48,7 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = "Profile",
-                        style = MaterialTheme.typography.titleLarge.copy(color = Color.White)
-                    )
-                },
+                title = { Text("Profile", style = MaterialTheme.typography.titleLarge.copy(color = Color.White)) },
                 actions = {
                     IconButton(onClick = { showLogoutDialog = true }) {
                         Icon(
@@ -68,61 +58,72 @@ fun ProfileScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
-        Column(
-            modifier = modifier
+        Box(
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.Top
         ) {
-            // User Information
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Hello, $userName",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.weight(1f)
-                )
-                IconButton(onClick = { showEditDialog = true }) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit Profile")
+            Column(verticalArrangement = Arrangement.Top) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Hello, $userName",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = { showEditDialog = true }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Profile")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        val income = transactions.filter { it.type == "income" }.sumOf { it.amount }
+                        val expense = transactions.filter { it.type == "expense" }.sumOf { it.amount }
+                        val balance = income - expense
+
+                        Text("Total Income: Rp $income", style = MaterialTheme.typography.titleMedium)
+                        Spacer(Modifier.height(8.dp))
+                        Text("Total Expense: Rp $expense", style = MaterialTheme.typography.titleMedium)
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "Balance: Rp $balance",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = if (balance >= 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Summary Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+            if (isLogoutProcessing) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("Total Income: Rp $income", style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(8.dp))
-                    Text("Total Expense: Rp $expense", style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = "Balance: Rp $balance",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = if (balance >= 0)  Color(0xFF4CAF50) else Color(0xFFF44336)
-                    )
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
         }
     }
 
-    // Logout Confirmation Dialog
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
@@ -131,9 +132,11 @@ fun ProfileScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showLogoutDialog = false
+                    isLogoutProcessing = true
                     scope.launch {
                         authViewModel.logout()
-                        if (!isLoading) onLogout()
+                        isLogoutProcessing = false // Reset processing state
+                        onLogout() // Trigger logout navigation
                     }
                 }) {
                     Text("Logout")

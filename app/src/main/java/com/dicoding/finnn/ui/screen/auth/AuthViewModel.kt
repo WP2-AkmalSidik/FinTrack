@@ -77,10 +77,11 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 authToken?.let { token ->
                     val response = ApiConfig.apiService.logout("Bearer $token")
                     if (response.isSuccessful) {
-                        // Clear session
                         dataStoreManager.clearSession()
                         authToken = null
                         _loginStatus.value = false
+                    } else {
+                        _errorMessage.value = "Failed to logout: ${response.message()}"
                     }
                 }
             } catch (e: Exception) {
