@@ -8,20 +8,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.dicoding.finnn.data.remote.response.Transaction
 import com.dicoding.finnn.ui.component.BottomNavigationBar
 import java.text.NumberFormat
 import java.util.Locale
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +36,16 @@ fun HomeScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var selectedTransactionId by remember { mutableStateOf<Int?>(null) }
 
+    // State untuk filter
+    var selectedFilter by remember { mutableStateOf("All") }
+    val filteredTransactions = transactions.filter { transaction ->
+        when (selectedFilter) {
+            "Income" -> transaction.type == "income"
+            "Expense" -> transaction.type == "expense"
+            else -> true // "All"
+        }
+    }
+
     LaunchedEffect(Unit) {
         transactionViewModel.loadTransactions()
     }
@@ -45,6 +54,10 @@ fun HomeScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Your Transactions", style = MaterialTheme.typography.titleLarge) },
+                actions = {
+                    // Dropdown untuk filter
+                    FilterIconDropdown(selectedFilter, onFilterChange = { selectedFilter = it })
+                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
@@ -91,7 +104,7 @@ fun HomeScreen(
                         )
                     }
 
-                    if (transactions.isEmpty()) {
+                    if (filteredTransactions.isEmpty()) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -107,71 +120,11 @@ fun HomeScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            items(transactions) { transaction ->
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            navController.navigate("transactionDetail/${transaction.id}")
-                                        },
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                    elevation = CardDefaults.cardElevation(4.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .padding(16.dp)
-                                            .fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = transaction.title,
-                                                style = MaterialTheme.typography.titleMedium,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-                                            Spacer(modifier = Modifier.height(4.dp))
-
-                                            val formattedAmount = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
-                                                .format(transaction.amount)
-                                            Text(
-                                                text = formattedAmount,
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                color = if (transaction.type == "income") Color(0xFF4CAF50) else Color(0xFFF44336)
-                                            )
-                                            Spacer(modifier = Modifier.height(4.dp))
-
-                                            Text(
-                                                text = transaction.type.uppercase(),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.secondary
-                                            )
-                                        }
-                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            IconButton(
-                                                onClick = {
-                                                    navController.navigate("editTransaction/${transaction.id}")
-                                                }
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.Edit,
-                                                    contentDescription = "Edit",
-                                                    tint = MaterialTheme.colorScheme.primary
-                                                )
-                                            }
-                                            IconButton(
-                                                onClick = {
-                                                    selectedTransactionId = transaction.id
-                                                    showDeleteDialog = true
-                                                }
-                                            ) {
-                                                Icon(
-                                                    Icons.Filled.Delete,
-                                                    contentDescription = "Delete",
-                                                    tint = MaterialTheme.colorScheme.error
-                                                )
-                                            }
-                                        }
-                                    }
+                            items(filteredTransactions) { transaction ->
+                                TransactionCard(transaction, navController) {
+                                    // Tampilkan dialog konfirmasi penghapusan
+                                    selectedTransactionId = transaction.id
+                                    showDeleteDialog = true
                                 }
                             }
                         }
@@ -179,6 +132,7 @@ fun HomeScreen(
                 }
             }
 
+            // Dialog konfirmasi penghapusan
             if (showDeleteDialog && selectedTransactionId != null) {
                 AlertDialog(
                     onDismissRequest = { showDeleteDialog = false },
@@ -200,6 +154,109 @@ fun HomeScreen(
                         }
                     }
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun FilterIconDropdown(selectedFilter: String, onFilterChange: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                Icons.Filled.ArrowDropDown,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                contentDescription = "Filter Transactions"
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text("All") },
+                onClick = {
+                    onFilterChange("All")
+                    expanded = false
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("Income") },
+                onClick = {
+                    onFilterChange("Income")
+                    expanded = false
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("Expense") },
+                onClick = {
+                    onFilterChange("Expense")
+                    expanded = false
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun TransactionCard(transaction: Transaction, navController: NavController, onDeleteClick: (Int) -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                navController.navigate("transactionDetail/${transaction.id}")
+            },
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = transaction.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+
+                val formattedAmount = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
+                    .format(transaction.amount)
+                Text(
+                    text = formattedAmount,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (transaction.type == "income") Color(0xFF4CAF50) else Color(0xFFF44336)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = transaction.type.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                IconButton(
+                    onClick = {
+                        navController.navigate("editTransaction/${transaction.id}")
+                    }
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Edit",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                IconButton(
+                    onClick = { onDeleteClick(transaction.id) }
+                ) {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }
