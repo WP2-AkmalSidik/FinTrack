@@ -22,28 +22,32 @@ class TransactionViewModel : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     fun setAuthToken(token: String) {
         authToken = token
     }
 
     fun loadTransactions() {
         viewModelScope.launch {
-            Log.d("TransactionViewModel", "Loading transactions...")
+            if (_transactions.value.isEmpty()) { // Hanya tampilkan loading jika belum ada data
+                _isLoading.value = true
+            }
             authToken?.let {
                 try {
                     val response = ApiConfig.apiService.getTransactions("Bearer $it")
                     if (response.isSuccessful) {
                         _transactions.value = response.body() ?: emptyList()
-                        Log.d("TransactionViewModel", "Transactions loaded successfully.")
                     } else {
                         _errorMessage.value = "Failed to load transactions"
-                        Log.e("TransactionViewModel", "Failed to load transactions: ${response.message()}")
                     }
                 } catch (e: Exception) {
                     _errorMessage.value = "Error loading transactions: ${e.message}"
-                    Log.e("TransactionViewModel", "Error loading transactions: ${e.message}")
+                } finally {
+                    _isLoading.value = false
                 }
-            } ?: Log.e("TransactionViewModel", "Auth token is null, cannot load transactions.")
+            }
         }
     }
 
@@ -83,22 +87,25 @@ class TransactionViewModel : ViewModel() {
 
     fun deleteTransaction(id: Int) {
         viewModelScope.launch {
+            _isLoading.value = true // Tampilkan loading saat menghapus
             authToken?.let {
                 try {
                     val response = ApiConfig.apiService.deleteTransaction("Bearer $it", id)
                     if (response.isSuccessful) {
-                        loadTransactions() // Refresh transactions after delete
+                        loadTransactions() // Refresh transaksi setelah menghapus
                     } else {
                         _errorMessage.value = "Failed to delete transaction"
                     }
                 } catch (e: Exception) {
                     _errorMessage.value = "Error deleting transaction: ${e.message}"
+                } finally {
+                    _isLoading.value = false
                 }
             }
         }
     }
 
     fun clearError() {
-        _errorMessage.value = null // Clear the error message
+        _errorMessage.value = null // Hapus pesan error
     }
 }

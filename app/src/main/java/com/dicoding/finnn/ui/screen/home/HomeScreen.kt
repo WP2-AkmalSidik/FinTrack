@@ -1,5 +1,6 @@
 package com.dicoding.finnn.ui.screen.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,6 +32,8 @@ fun HomeScreen(
 ) {
     val transactions by transactionViewModel.transactions.collectAsState()
     val errorMessage by transactionViewModel.errorMessage.collectAsState()
+    val isLoading by transactionViewModel.isLoading.collectAsState()
+
     var showDeleteDialog by remember { mutableStateOf(false) }
     var selectedTransactionId by remember { mutableStateOf<Int?>(null) }
 
@@ -59,102 +62,115 @@ fun HomeScreen(
             }
         },
     ) { innerPadding ->
-        Column(
-            modifier = modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.Top
-        ) {
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (errorMessage != null) {
-                Text(
-                    text = "Error: $errorMessage",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-
-            if (transactions.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (isLoading) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "No transactions available.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                    )
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxSize()
+                Column(
+                    modifier = modifier
+                        .padding(innerPadding)
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.Top
                 ) {
-                    items(transactions) { transaction ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    navController.navigate("transactionDetail/${transaction.id}")
-                                },
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            elevation = CardDefaults.cardElevation(4.dp)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (errorMessage != null) {
+                        Text(
+                            text = "Error: $errorMessage",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+                    }
+
+                    if (transactions.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = transaction.title,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-
-                                    val formattedAmount = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
-                                        .format(transaction.amount)
-                                    Text(
-                                        text = formattedAmount,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = if (transaction.type == "income") Color(0xFF4CAF50) else Color(0xFFF44336)
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-
-                                    Text(
-                                        text = transaction.type.uppercase(),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.secondary
-                                    )
-                                }
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    IconButton(
-                                        onClick = {
-                                            navController.navigate("editTransaction/${transaction.id}")
-                                        }
+                            Text(
+                                text = "No transactions available.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(transactions) { transaction ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            navController.navigate("transactionDetail/${transaction.id}")
+                                        },
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                    elevation = CardDefaults.cardElevation(4.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .padding(16.dp)
+                                            .fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(
-                                            Icons.Default.Edit,
-                                            contentDescription = "Edit",
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                    IconButton(
-                                        onClick = {
-                                            selectedTransactionId = transaction.id
-                                            showDeleteDialog = true
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = transaction.title,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+
+                                            val formattedAmount = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
+                                                .format(transaction.amount)
+                                            Text(
+                                                text = formattedAmount,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = if (transaction.type == "income") Color(0xFF4CAF50) else Color(0xFFF44336)
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+
+                                            Text(
+                                                text = transaction.type.uppercase(),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.secondary
+                                            )
                                         }
-                                    ) {
-                                        Icon(
-                                            Icons.Filled.Delete,
-                                            contentDescription = "Delete",
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
+                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            IconButton(
+                                                onClick = {
+                                                    navController.navigate("editTransaction/${transaction.id}")
+                                                }
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.Edit,
+                                                    contentDescription = "Edit",
+                                                    tint = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                            IconButton(
+                                                onClick = {
+                                                    selectedTransactionId = transaction.id
+                                                    showDeleteDialog = true
+                                                }
+                                            ) {
+                                                Icon(
+                                                    Icons.Filled.Delete,
+                                                    contentDescription = "Delete",
+                                                    tint = MaterialTheme.colorScheme.error
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
