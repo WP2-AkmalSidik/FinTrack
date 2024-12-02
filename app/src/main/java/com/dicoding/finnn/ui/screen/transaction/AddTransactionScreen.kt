@@ -34,19 +34,16 @@ fun AddTransactionScreen(
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
-    var type by remember { mutableStateOf("income") } // "income" atau "expense"
+    var type by remember { mutableStateOf("income") }
 
-    // Inisialisasi tanggal transaksi dengan tanggal hari ini
     val calendar = Calendar.getInstance()
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     var transactionDate by remember { mutableStateOf(dateFormat.format(calendar.time)) }
 
-    // Validasi input
     val isFormValid by derivedStateOf {
         title.isNotBlank() && amount.toDoubleOrNull() != null && (type == "income" || type == "expense")
     }
 
-    // Konfigurasi DatePickerDialog
     val datePickerDialog = DatePickerDialog(
         LocalContext.current,
         { _, year, month, dayOfMonth ->
@@ -121,7 +118,6 @@ fun AddTransactionScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Radio Buttons for Type
             Text(
                 text = "Transaction Type",
                 style = MaterialTheme.typography.bodyMedium,
@@ -151,7 +147,7 @@ fun AddTransactionScreen(
 
             OutlinedTextField(
                 value = transactionDate,
-                onValueChange = { /* Tidak diubah secara manual */ },
+                onValueChange = {  },
                 label = { Text("Transaction Date") },
                 modifier = Modifier
                     .fillMaxWidth()

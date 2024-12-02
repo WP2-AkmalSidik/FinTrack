@@ -39,7 +39,6 @@ class MainActivity : ComponentActivity() {
                 val transactionViewModel: TransactionViewModel = viewModel()
                 val navController = rememberNavController()
 
-                // Initialize token from DataStore
                 LaunchedEffect(Unit) {
                     dataStoreManager.authToken.collect { token ->
                         if (!token.isNullOrEmpty()) {
@@ -79,8 +78,8 @@ class MainActivity : ComponentActivity() {
                             authViewModel = authViewModel,
                             transactionViewModel = transactionViewModel,
                             onLogout = {
-                                lifecycleScope.launch { // Use lifecycleScope to handle suspend function
-                                    dataStoreManager.clearSession() // Clear session
+                                lifecycleScope.launch {
+                                    dataStoreManager.clearSession()
                                 }
                                 currentScreen = Screen.Login
                             }

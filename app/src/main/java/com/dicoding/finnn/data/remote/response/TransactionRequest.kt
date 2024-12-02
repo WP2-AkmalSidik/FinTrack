@@ -7,5 +7,5 @@ data class TransactionRequest(
     val description: String,
     val amount: Double,
     val type: String,
-    @SerializedName("transaction_date") val transactionDate: String // gunakan serialized name jika ada perbedaan penamaan
+    @SerializedName("transaction_date") val transactionDate: String
 )

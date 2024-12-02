@@ -31,7 +31,7 @@ class TransactionViewModel : ViewModel() {
 
     fun loadTransactions() {
         viewModelScope.launch {
-            if (_transactions.value.isEmpty()) { // Hanya tampilkan loading jika belum ada data
+            if (_transactions.value.isEmpty()) {
                 _isLoading.value = true
             }
             authToken?.let {
@@ -57,7 +57,7 @@ class TransactionViewModel : ViewModel() {
                 try {
                     val response = ApiConfig.apiService.createTransaction("Bearer $it", transaction)
                     if (response.isSuccessful) {
-                        loadTransactions() // Refresh the list
+                        loadTransactions()
                     } else {
                         _errorMessage.value = "Failed to create transaction"
                     }
@@ -87,12 +87,12 @@ class TransactionViewModel : ViewModel() {
 
     fun deleteTransaction(id: Int) {
         viewModelScope.launch {
-            _isLoading.value = true // Tampilkan loading saat menghapus
+            _isLoading.value = true
             authToken?.let {
                 try {
                     val response = ApiConfig.apiService.deleteTransaction("Bearer $it", id)
                     if (response.isSuccessful) {
-                        loadTransactions() // Refresh transaksi setelah menghapus
+                        loadTransactions()
                     } else {
                         _errorMessage.value = "Failed to delete transaction"
                     }
@@ -106,6 +106,6 @@ class TransactionViewModel : ViewModel() {
     }
 
     fun clearError() {
-        _errorMessage.value = null // Hapus pesan error
+        _errorMessage.value = null
     }
 }

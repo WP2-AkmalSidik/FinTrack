@@ -33,7 +33,6 @@ fun AppNavGraph(
             )
         }
 
-        // Profile Screen
         composable("profile") {
             ProfileScreen(
                 authViewModel = authViewModel, // Corrected parameter name

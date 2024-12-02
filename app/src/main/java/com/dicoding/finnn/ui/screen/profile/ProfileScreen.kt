@@ -135,8 +135,8 @@ fun ProfileScreen(
                     isLogoutProcessing = true
                     scope.launch {
                         authViewModel.logout()
-                        isLogoutProcessing = false // Reset processing state
-                        onLogout() // Trigger logout navigation
+                        isLogoutProcessing = false
+                        onLogout()
                     }
                 }) {
                     Text("Logout")

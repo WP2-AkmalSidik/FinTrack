@@ -42,7 +42,7 @@ fun HomeScreen(
         when (selectedFilter) {
             "Income" -> transaction.type == "income"
             "Expense" -> transaction.type == "expense"
-            else -> true // "All"
+            else -> true
         }
     }
 
@@ -55,7 +55,6 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text("Your Transactions", style = MaterialTheme.typography.titleLarge) },
                 actions = {
-                    // Dropdown untuk filter
                     FilterIconDropdown(selectedFilter, onFilterChange = { selectedFilter = it })
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -132,7 +131,6 @@ fun HomeScreen(
                 }
             }
 
-            // Dialog konfirmasi penghapusan
             if (showDeleteDialog && selectedTransactionId != null) {
                 AlertDialog(
                     onDismissRequest = { showDeleteDialog = false },

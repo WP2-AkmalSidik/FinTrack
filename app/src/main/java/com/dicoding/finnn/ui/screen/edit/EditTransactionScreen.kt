@@ -98,7 +98,6 @@ fun EditTransactionScreen(
             )
             Spacer(Modifier.height(16.dp))
 
-            // Dropdown Menu for Type
             Text(
                 text = "Transaction Type",
                 style = MaterialTheme.typography.bodyMedium,

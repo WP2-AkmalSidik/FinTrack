@@ -128,7 +128,6 @@ fun TransactionDetailContent(transaction: Transaction) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                // Amount with color indicator
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -147,14 +146,12 @@ fun TransactionDetailContent(transaction: Transaction) {
                     )
                 }
 
-                // Description
                 Text(
                     text = transaction.description ?: "No Description",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
 
-                // Transaction Type
                 Text(
                     text = "Type: ${transaction.type.replaceFirstChar {
                         if (it.isLowerCase()) it.titlecase(
@@ -167,7 +164,6 @@ fun TransactionDetailContent(transaction: Transaction) {
                     color = transactionColor
                 )
 
-                // Date
                 Text(
                     text = "Date: ${transaction.transaction_date}",
                     style = MaterialTheme.typography.bodyMedium,

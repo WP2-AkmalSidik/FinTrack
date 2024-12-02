@@ -26,14 +26,12 @@ fun LoginScreen(
 
     val isLoading by viewModel.loading.collectAsState()
 
-    // Observasi perubahan status login
     LaunchedEffect(viewModel.loginStatus.collectAsState().value) {
         if (viewModel.loginStatus.value) {
             onLoginSuccess()
         }
     }
 
-    // Dialog untuk kesalahan login
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },

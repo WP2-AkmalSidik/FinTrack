@@ -13,10 +13,10 @@ object ApiConfig {
     }
 
     private val client = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)  // Logging untuk debug
+        .addInterceptor(loggingInterceptor)
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
-                .header("Accept", "application/json")  // Cukup gunakan Accept header
+                .header("Accept", "application/json")
                 .build()
             chain.proceed(request)
         }

@@ -57,21 +57,19 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     authToken = token
                     _loginStatus.value = true
 
-                    // Simpan token ke DataStore
                     dataStoreManager.saveUserSession(token, true)
                 } else {
-                    // Identifikasi kesalahan dari respons
                     val errorBody = response.errorBody()?.string() ?: ""
                     val errorType = when {
                         errorBody.contains("email", ignoreCase = true) -> "EMAIL_NOT_FOUND"
                         errorBody.contains("password", ignoreCase = true) -> "WRONG_PASSWORD"
                         else -> "UNKNOWN_ERROR"
                     }
-                    onError(errorType) // Kirimkan jenis kesalahan melalui callback
+                    onError(errorType)
                 }
             } catch (e: Exception) {
                 _loading.value = false
-                onError("UNKNOWN_ERROR") // Kirim kesalahan umum jika terjadi exception
+                onError("UNKNOWN_ERROR")
             }
         }
     }

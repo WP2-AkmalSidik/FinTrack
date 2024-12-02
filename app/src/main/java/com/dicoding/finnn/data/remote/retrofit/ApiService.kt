@@ -20,7 +20,7 @@ interface ApiService {
     suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
 
     @GET("logout")
-    suspend fun logout(@Header("Authorization") authHeader: String): Response<Unit> // Tambahkan header Authorization
+    suspend fun logout(@Header("Authorization") authHeader: String): Response<Unit>
 
     @GET("transactions")
     suspend fun getTransactions(@Header("Authorization") authHeader: String): Response<List<Transaction>>
